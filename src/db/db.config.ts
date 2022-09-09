@@ -13,7 +13,7 @@ export class DbConfig
             host: process.env.DB_HOST,
             port: parseInt(process.env.DB_PORT || '3306'),
             entities: DbConfig.getEntities(),
-            synchronize: true,
+            synchronize: true
         }
     }
 

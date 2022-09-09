@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { CertificateAuthorityService } from '../trusted-ca-store/certificate-authority.service';
 import { HttpErrorCode } from '../http-client/http-error-code.enum';
 import { RequestDataDto } from './request-data.dto';
 import { HttpClientService } from '../http-client/http-client.service';
+import { HTTPError, PlainResponse } from 'got/dist/source';
 
 
 @Injectable()
@@ -15,9 +16,9 @@ export class SenderService {
         private httpClientService: HttpClientService){}
 
 
-    async doRequest(proxyRequestHeader:RequestDataDto, retry = 3)
+    async doRequest(proxyRequestHeader:RequestDataDto, retry = 3) : Promise<PlainResponse>
     {
-        this.logger.debug(`
+        this.logger.log(`
         [doRequest] 
         >>> URL : ${proxyRequestHeader.url} 
         >>> headers : ${JSON.stringify(proxyRequestHeader.headers)}
@@ -30,7 +31,7 @@ export class SenderService {
 
 
     
-    private async handlerError(error:any, proxyRequestHeader:RequestDataDto, retryFunction:Function , retry:number)
+    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto, retryFunction:Function , retry:number)
     {
         if(HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code)
         {
@@ -42,14 +43,36 @@ export class SenderService {
             }
         }
 
-       
-        const messageError = error?.response?.data || error?.message || error;
+        const message = this.geMessageError(error);
+        const status = error?.response?.statusCode || 500;
 
-        this.logger.error(`[handlerError] - error.code - ${error.code} - ${JSON.stringify(messageError)}`, error);
+        const payloadError = {
+            status,
+            code : error.code,
+            xFapiInteractionId: proxyRequestHeader.interactionId,
+            message
+        }
 
-        throw messageError;    
+        throw new HttpException(HttpException.createBody(payloadError), status);
     }
     
+    private geMessageError(error: HTTPError)
+    {
+        const messageError = error?.response?.body || error?.message || error;
+
+        if(messageError)
+        {
+            try
+            {
+                return JSON.parse(messageError as string);
+            }
+            catch(e)
+            {
+                return messageError;
+            }
+        }
+    }
+
 
 }
 

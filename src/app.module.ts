@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CertificateConfig } from './certificate/certitificate.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DbConfig } from './db/db.config';
+import { MetricsService } from './metrics/metrics.service';
 
 
 @Module({
@@ -24,7 +25,8 @@ import { DbConfig } from './db/db.config';
     HttpClientService,
     SenderService,
     CertificateConfig,
-    CertificateAuthorityService
+    CertificateAuthorityService,
+    MetricsService
   ],
   exports: [
     ConfigModule

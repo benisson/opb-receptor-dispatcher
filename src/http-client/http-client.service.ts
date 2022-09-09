@@ -1,55 +1,77 @@
-import { Injectable } from '@nestjs/common';
-import { CertificateConfig } from 'src/certificate/certitificate.config';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { CertificateConfig } from '../certificate/certitificate.config';
 import { HttpLoggerService } from '../http-logger/http-logger.service';
+import { RequestDataDto } from '../sender/request-data.dto';
+import { CertificateAuthorityService } from '../trusted-ca-store/certificate-authority.service';
+import { MetricsService } from '../metrics/metrics.service';
+import got, { Got, Method, Response, OptionsOfJSONResponseBody, RequestError, PlainResponse } from 'got/dist/source';
 import * as AgentKeepAlive from 'agentkeepalive';
-import { RequestDataDto } from 'src/sender/request-data.dto';
-import { CertificateAuthorityService } from 'src/trusted-ca-store/certificate-authority.service';
-//import { Got, PlainResponse, Method } from 'got';
+import { METRICS, MetricsLabelRequestControl } from 'src/metrics/metrics';
+import { HttpErrorCode } from './http-error-code.enum';
 
 
 @Injectable()
 export class HttpClientService {
 
-    private httpClient: any;
+    private httpClient: Got;
     
     constructor(
         private certificateConfig: CertificateConfig,
         private certificateAuthorityService: CertificateAuthorityService,
-        private httpLoggerService: HttpLoggerService)
+        private httpLoggerService: HttpLoggerService,
+        private metricsService: MetricsService)
     {
         this.createHttpClient();
     }
 
     private async createHttpClient()
     {
-        this.httpClient = await this.createAxiosClient();
+        this.httpClient = await this.createGotClient();
     }
 
-    private async createAxiosClient()
+    private async createGotClient()
     {
         const httpsAgent = this.createHttpsAgent();
-        
-        const gotSource = await import('got');
 
-         return gotSource.got.extend({ agent: {
+        return got.extend({ agent: {
             https: httpsAgent,
             http2: true
-         }});
-
-        //const instance =  axios.create({
-        //    httpsAgent : httpsAgent,
-        //    //timeout: 15000
-        //});
-//
-        //instance.interceptors
-        //        .response
-        //        .use(response => this.httpLoggerService.handlerResponseSuccess(response),
-        //             error    => this.httpLoggerService.handlerResponseError(error));
-        //
-
-        //return instance;
+         }},
+         {
+            hooks: {
+                afterResponse: [
+                    (response, retryWithMergedOptions) => {
+                    this.httpLoggerService.handlerResponseSuccess(response);
+                    this.registerMetrics(response);
+                    return response;
+                }],
+                beforeError: [
+                    error => {
+                        this.httpLoggerService.handlerResponseError(error);
+                        this.registerMetrics(error);
+                        return error;
+                    }
+                ]
+            }
+         });
     }
 
+    private registerMetrics(data: RequestError & PlainResponse | any)
+    {
+        const url = data.request.options.url as URL;
+
+        const status = data?.statusCode || data?.response?.statusCode;
+
+        const metric = {
+            [MetricsLabelRequestControl.REMOTE_ADDRESS]: data.ip,
+            [MetricsLabelRequestControl.HOSTNAME]: url.hostname,
+            [MetricsLabelRequestControl.ADDR]: url.pathname,
+            [MetricsLabelRequestControl.STATUS]: status,
+            [MetricsLabelRequestControl.METHOD]: data?.request?.options?.method,
+            [MetricsLabelRequestControl.IS_ERROR]: (status >= 200 && status <= 299) ? "false" : "true"
+        }
+        this.metricsService.incrementWithLabels(METRICS.get("REQUEST_CONTROL"), metric);
+    }
 
     private createHttpsAgent()
     {
@@ -66,24 +88,18 @@ export class HttpClientService {
     }   
 
 
-    public doRequest(proxyRequestHeader:RequestDataDto): Promise<any>
+    public doRequest(proxyRequestHeader:RequestDataDto): Promise<Response>
     {
-        const config = {
-            url: proxyRequestHeader.url,
-            body: proxyRequestHeader.body,
+        const config: OptionsOfJSONResponseBody = {
+            ...(proxyRequestHeader.isJson)  && {json: proxyRequestHeader.body},
+            ...(!proxyRequestHeader.isJson) && {body: proxyRequestHeader.body},
             headers: proxyRequestHeader.headers,
-            method: proxyRequestHeader.method 
+            method: proxyRequestHeader.method as Method,
+            dnsCache: true,
+            followRedirect: false
         }
 
-        return this.httpClient(proxyRequestHeader.url, config)
-                   .then(response => this.handlerSuccess(response))
-
+        return this.httpClient(proxyRequestHeader.url, config);
     }
 
-
-    private handlerSuccess(response:any)
-    {   
-        console.log("\n\n tsssss", response.timings);
-        return response.body;
-    }
 }

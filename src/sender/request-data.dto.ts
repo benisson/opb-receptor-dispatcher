@@ -19,14 +19,10 @@ export class RequestDataDto
     @Expose({ name: 'x-fapi-interaction-id' })
     interactionId:string;
 
+    
     url:string;
-
-    requestReceived:string;
-
     headers:any;
-
     body:any;
-
+    isJson:boolean;
     method:string;
-
 }
