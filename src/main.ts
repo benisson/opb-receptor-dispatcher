@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 import { ValidationException } from './sender/validation.exceptions';
 import * as morgan from 'morgan';
 import * as expressMonitor from '@labbsr0x/express-monitor';
-
+import * as v8 from 'v8';
 
 const logger = new Logger('MAIN');
 
@@ -31,6 +31,10 @@ async function bootstrap() {
   startMetrics(app);
 
   const port = process.env.PORT || 3000;
+
+  const totalHeapSize = v8.getHeapStatistics().total_available_size;
+  const totalHeapSizeGb = (totalHeapSize / 1024 / 1024 / 1024).toFixed(2);
+  console.log('totalHeapSizeGb: ', totalHeapSizeGb);
 
   await app.listen(port, () => {
     logger.log(`>>> ${process.env.npm_package_name} - VERSAO ${process.env.npm_package_version} - PORTA ${port} - I'm Ready :)`);
