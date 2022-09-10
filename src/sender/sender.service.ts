@@ -25,21 +25,21 @@ export class SenderService {
         `);
 
         return this.httpClientService.doRequest(proxyRequestHeader)
-                   .catch(error => this.handlerError(error, proxyRequestHeader,retries, SenderService.prototype.doRequest));
+                   .catch(error => this.handlerError(error, proxyRequestHeader, retries);
     }
 
 
 
     
-    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto, retries:number, retry:(request, retries) => Promise<PlainResponse>)
+    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto, retries:number)
     {
         if(HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code || HttpErrorCode.SELF_SIGNED_CERT_IN_CHAIN === error.code)
         {
             await this.certificateAuthorityService.updateCaBundleByURL(proxyRequestHeader.host, proxyRequestHeader.port);
             
-            if(retry)
+            if(retries)
             {
-                return retry(proxyRequestHeader, retries - 1);
+                return this.doRequest(proxyRequestHeader, retries - 1);
             }
         }
 
