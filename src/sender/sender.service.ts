@@ -16,7 +16,7 @@ export class SenderService {
         private httpClientService: HttpClientService){}
 
 
-    async doRequest(proxyRequestHeader:RequestDataDto, retry = 3) : Promise<PlainResponse>
+    async doRequest(proxyRequestHeader:RequestDataDto, retries = 3) : Promise<PlainResponse>
     {
         this.logger.log(`
         [doRequest] 
@@ -25,13 +25,13 @@ export class SenderService {
         `);
 
         return this.httpClientService.doRequest(proxyRequestHeader)
-                   .catch(error => this.handlerError(error, proxyRequestHeader, this.doRequest, retry));
+                   .catch(error => this.handlerError(error, proxyRequestHeader,retries, SenderService.prototype.doRequest));
     }
 
 
 
     
-    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto, retryFunction:Function , retry:number)
+    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto, retries:number, retry:(request, retries) => Promise<PlainResponse>)
     {
         if(HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code || HttpErrorCode.SELF_SIGNED_CERT_IN_CHAIN === error.code)
         {
@@ -39,7 +39,7 @@ export class SenderService {
             
             if(retry)
             {
-                return retryFunction(proxyRequestHeader, retry - 1);
+                return retry(proxyRequestHeader, retries - 1);
             }
         }
 
