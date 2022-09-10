@@ -65,7 +65,7 @@ export class HttpLogger
     @Column({comment: 'Timestamp quando soquete foi atribuído ao request', precision: 3})
     requestTimestampSocket:Date;
 
-    @Column({comment: 'Timestamp quando a pesquisa ao DNS terminou.', type: 'datetime', precision: 3 })
+    @Column({comment: 'Timestamp quando a pesquisa ao DNS terminou.', type: 'datetime', precision: 3, nullable: true })
     requestTimestampDNS:Date;
 
     @Column({comment: 'Timestamp quando o soquete foi conectado com sucesso', type: 'datetime', precision: 3})

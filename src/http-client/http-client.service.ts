@@ -95,7 +95,7 @@ export class HttpClientService {
             ...(!proxyRequestHeader.isJson) && {body: proxyRequestHeader.body},
             headers: proxyRequestHeader.headers,
             method: proxyRequestHeader.method as Method,
-            dnsCache: true,
+            dnsCache: false,
             followRedirect: false
         }
 
