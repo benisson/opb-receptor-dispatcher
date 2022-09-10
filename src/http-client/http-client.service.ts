@@ -24,7 +24,7 @@ export class HttpClientService {
         this.createHttpClient();
     }
 
-    private async createHttpClient()
+    async createHttpClient()
     {
         this.httpClient = await this.createGotClient();
     }

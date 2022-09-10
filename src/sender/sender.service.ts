@@ -36,7 +36,9 @@ export class SenderService {
         if(HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code || HttpErrorCode.SELF_SIGNED_CERT_IN_CHAIN === error.code)
         {
             await this.certificateAuthorityService.updateCaBundleByURL(proxyRequestHeader.host, proxyRequestHeader.port);
-            
+
+            await this.httpClientService.createHttpClient();
+
             if(retries)
             {
                 return this.doRequest(proxyRequestHeader, retries - 1);
