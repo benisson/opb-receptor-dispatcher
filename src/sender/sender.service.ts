@@ -25,7 +25,7 @@ export class SenderService {
         `);
 
         return this.httpClientService.doRequest(proxyRequestHeader)
-                   .catch(error => this.handlerError(error, proxyRequestHeader, retries);
+                   .catch(error => this.handlerError(error, proxyRequestHeader, retries));
     }
 
 
