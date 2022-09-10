@@ -49,7 +49,7 @@ export class HttpLoggerService {
         dataHttp.messageError = JSON.stringify(error?.message);
         dataHttp.requestPayload = JSON.stringify(optionsRequest.body || optionsRequest.json || optionsRequest.form);
         dataHttp.url = optionsRequest.url.toString();
-        dataHttp.method = error.request.options.method;
+        dataHttp.method = optionsRequest?.method;
         dataHttp.path = optionsRequest.url.pathname;
         dataHttp.hostname = optionsRequest.url.host;
         dataHttp.remoteAddress = error?.response?.ip;
@@ -74,7 +74,7 @@ export class HttpLoggerService {
         dataHttp.responsePayload = JSON.stringify(response.body);
         dataHttp.requestPayload  = JSON.stringify(optionsRequest.body || optionsRequest.json || optionsRequest.form);
         dataHttp.url = optionsRequest.url.toString();
-        dataHttp.method = optionsRequest.method as string;
+        dataHttp.method = optionsRequest?.method as string;
         dataHttp.path = optionsRequest.url.pathname;
         dataHttp.hostname = optionsRequest.url.hostname;
         dataHttp.remoteAddress = response.ip;

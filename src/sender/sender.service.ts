@@ -33,7 +33,7 @@ export class SenderService {
     
     private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto, retryFunction:Function , retry:number)
     {
-        if(HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code)
+        if(HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code || HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code)
         {
             await this.certificateAuthorityService.updateCaBundleByURL(proxyRequestHeader.host, proxyRequestHeader.port);
             

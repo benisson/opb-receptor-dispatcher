@@ -20,7 +20,7 @@ export class CertificateAuthorityService {
             method: 'GET',
             port: port,
             servername: hostname,
-            
+            rejectUnauthorized: false
         }
 
         const response = new Promise<string>((resolve, reject) => {

@@ -77,7 +77,7 @@ export class HttpClientService {
     {
         const options = {
             keepAlive: true,
-            //ca: this.certificateAuthorityService.getCaBundle(),
+            ca: this.certificateAuthorityService.getCaBundle(),
             cert: this.certificateConfig.getCertificatePEM(), 
             key: this.certificateConfig.getKeyPEM(),
             timeout: 15000,
