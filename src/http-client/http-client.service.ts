@@ -31,7 +31,7 @@ export class HttpClientService {
 
     private async createGotClient()
     {
-        const httpsAgent = this.createHttpsAgent();
+        const httpsAgent = await this.createHttpsAgent();
 
         return got.extend({ agent: {
             https: httpsAgent,
@@ -73,11 +73,13 @@ export class HttpClientService {
         this.metricsService.incrementWithLabels(METRICS.get("REQUEST_CONTROL"), metric);
     }
 
-    private createHttpsAgent()
+    private async createHttpsAgent()
     {
+        const caBundle = await this.certificateAuthorityService.getCaIntermediateAndRootMozilla();
+
         const options = {
             keepAlive: true,
-            ca: this.certificateAuthorityService.getCaBundle(),
+            ca: caBundle,
             cert: this.certificateConfig.getCertificatePEM(), 
             key: this.certificateConfig.getKeyPEM(),
             timeout: 15000,

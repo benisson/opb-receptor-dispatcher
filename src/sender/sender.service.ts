@@ -1,6 +1,5 @@
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { CertificateAuthorityService } from '../trusted-ca-store/certificate-authority.service';
-import { HttpErrorCode } from '../http-client/http-error-code.enum';
 import { RequestDataDto } from './request-data.dto';
 import { HttpClientService } from '../http-client/http-client.service';
 import { HTTPError, PlainResponse } from 'got/dist/source';
@@ -16,7 +15,7 @@ export class SenderService {
         private httpClientService: HttpClientService){}
 
 
-    async doRequest(proxyRequestHeader:RequestDataDto, retries = 3) : Promise<PlainResponse>
+    async doRequest(proxyRequestHeader:RequestDataDto) : Promise<PlainResponse>
     {
         this.logger.log(`
         [doRequest] 
@@ -24,27 +23,20 @@ export class SenderService {
         >>> headers : ${JSON.stringify(proxyRequestHeader.headers)}
         `);
 
-        return this.httpClientService.doRequest(proxyRequestHeader)
-                   .catch(error => this.handlerError(error, proxyRequestHeader, retries));
+        try
+        {
+            return await this.httpClientService.doRequest(proxyRequestHeader);
+        }
+        catch(error)
+        {
+            this.handlerError(error, proxyRequestHeader);
+        }
     }
 
 
 
-    
-    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto, retries:number)
+    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto)
     {
-        if(HttpErrorCode.UNABLE_TO_GET_ISSUER_CERT_LOCALLY === error.code || HttpErrorCode.SELF_SIGNED_CERT_IN_CHAIN === error.code)
-        {
-            await this.certificateAuthorityService.updateCaBundleByURL(proxyRequestHeader.host, proxyRequestHeader.port);
-
-            await this.httpClientService.createHttpClient();
-
-            if(retries)
-            {
-                return this.doRequest(proxyRequestHeader, retries - 1);
-            }
-        }
-
         const message = this.geMessageError(error);
         const status = error?.response?.statusCode || 500;
 
