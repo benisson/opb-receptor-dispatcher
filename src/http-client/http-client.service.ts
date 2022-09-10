@@ -90,7 +90,7 @@ export class HttpClientService {
     }   
 
 
-    public doRequest(proxyRequestHeader:RequestDataDto): Promise<Response>
+    public doRequest(proxyRequestHeader:RequestDataDto): Promise<PlainResponse>
     {
         const config: OptionsOfJSONResponseBody = {
             ...(proxyRequestHeader.isJson)  && {json: proxyRequestHeader.body},

@@ -15,7 +15,7 @@ export class SenderService {
         private httpClientService: HttpClientService){}
 
 
-    async doRequest(proxyRequestHeader:RequestDataDto) : Promise<PlainResponse | void>
+    async doRequest(proxyRequestHeader:RequestDataDto) : Promise<PlainResponse>
     {
         this.logger.log(`
         [doRequest] 
@@ -29,7 +29,7 @@ export class SenderService {
 
 
 
-    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto)
+    private async handlerError(error:HTTPError, proxyRequestHeader:RequestDataDto) : Promise<PlainResponse>
     {
         const message = this.geMessageError(error);
         const status = error?.response?.statusCode || 500;
