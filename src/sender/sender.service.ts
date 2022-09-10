@@ -15,7 +15,7 @@ export class SenderService {
         private httpClientService: HttpClientService){}
 
 
-    async doRequest(proxyRequestHeader:RequestDataDto) : Promise<PlainResponse>
+    async doRequest(proxyRequestHeader:RequestDataDto) : Promise<PlainResponse | void>
     {
         this.logger.log(`
         [doRequest] 
@@ -23,14 +23,8 @@ export class SenderService {
         >>> headers : ${JSON.stringify(proxyRequestHeader.headers)}
         `);
 
-        try
-        {
-            return await this.httpClientService.doRequest(proxyRequestHeader);
-        }
-        catch(error)
-        {
-            this.handlerError(error, proxyRequestHeader);
-        }
+        return this.httpClientService.doRequest(proxyRequestHeader)
+                   .catch(error => this.handlerError(error, proxyRequestHeader));
     }
 
 
